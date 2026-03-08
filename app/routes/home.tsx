@@ -1,13 +1,17 @@
-import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import type { Route } from './+types/home';
+import Dashboard from '../presentation/dashboard/Dashboard';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
+    { title: 'Panel Administrativo - Clínica' },
+    {
+      name: 'description',
+      content:
+        'Dashboard administrativo para gestionar médicos, pacientes y citas.',
+    },
   ];
 }
 
 export default function Home() {
-  return <Welcome />;
+  return <Dashboard />;
 }
