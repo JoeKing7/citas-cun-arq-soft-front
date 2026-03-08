@@ -10,12 +10,12 @@ import {
   Legend,
 } from 'recharts';
 import { Paper, Box, Typography, Select, MenuItem } from '@mui/material';
-import type * as api from '../../application/services/api';
+import type { WeeklyOverviewItem } from '../../domain/types';
 
 export default function OverviewCharts({
   data,
 }: {
-  data?: api.WeeklyOverviewItem[];
+  data?: WeeklyOverviewItem[];
 }) {
   const [period, setPeriod] = React.useState('Semana');
   const chartData = data ?? [];

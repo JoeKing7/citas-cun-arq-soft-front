@@ -2,15 +2,11 @@ import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { Paper, Typography, Box, Avatar } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import type * as api from '../../application/services/api';
+import type { MonthlyEarnings } from '../../domain/types';
 
-export default function MonthlyEarnings({
-  data,
-}: {
-  data?: api.MonthlyEarnings;
-}) {
+export default function MonthlyEarnings({ data }: { data?: MonthlyEarnings }) {
   const total = data?.total ?? 0;
-  const spark = (data?.sparkline ?? []).map((v) => ({ v }));
+  const spark = (data?.sparkline ?? []).map((v: number) => ({ v }));
 
   return (
     <Paper sx={{ p: 3 }}>

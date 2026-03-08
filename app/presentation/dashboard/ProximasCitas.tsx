@@ -12,7 +12,7 @@ import {
   Chip,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import type * as api from '../../application/services/api';
+import type { ProximaCita } from '../../domain/types';
 
 const estadoChip = (estado: string) => {
   if (estado === 'ACTIVA')
@@ -32,7 +32,7 @@ const estadoChip = (estado: string) => {
   );
 };
 
-export default function ProximasCitas({ data }: { data?: api.ProximaCita[] }) {
+export default function ProximasCitas({ data }: { data?: ProximaCita[] }) {
   const rows = data && data.length ? data : [];
 
   return (

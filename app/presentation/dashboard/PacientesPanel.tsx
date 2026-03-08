@@ -24,8 +24,8 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
 import { v4 as uuid } from 'uuid';
-import type { Paciente } from '../../repository/storage';
-import * as api from '../../application/services/api';
+import type { Paciente } from '~/domain/types';
+import * as api from '../../application/services';
 
 function getInitials(name: string) {
   return name

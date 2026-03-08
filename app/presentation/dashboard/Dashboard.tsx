@@ -12,7 +12,15 @@ import CitasPanel from './CitasPanel';
 import YearlyBreakup from './YearlyBreakup';
 import MonthlyEarnings from './MonthlyEarnings';
 import ProximasCitas from './ProximasCitas';
-import * as api from '../../application/services/api';
+import * as api from '../../application/services';
+import type {
+  DashboardStats as DashboardStatsType,
+  WeeklyOverviewItem as WeeklyOverviewItemType,
+  YearlyBreakup as YearlyBreakupType,
+  MonthlyEarnings as MonthlyEarningsType,
+  ActividadItem as ActividadItemType,
+  ProximaCita as ProximaCitaType,
+} from '../../domain/types';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PeopleIcon from '@mui/icons-material/People';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -23,26 +31,26 @@ type View = 'dashboard' | 'medicos' | 'pacientes' | 'citas';
 export default function Dashboard() {
   const [open, setOpen] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
-  const initialStats: api.DashboardStats = {
+  const initialStats: DashboardStatsType = {
     citasHoy: 0,
     medicosActivos: 0,
     totalPacientes: 0,
     citasSemana: 0,
     tendencias: { citasHoy: '', medicos: '', pacientes: '' },
   };
-  const [stats, setStats] = React.useState<api.DashboardStats>(initialStats);
-  const [overview, setOverview] = React.useState<api.WeeklyOverviewItem[]>([]);
-  const [yearly, setYearly] = React.useState<api.YearlyBreakup>({
+  const [stats, setStats] = React.useState<DashboardStatsType>(initialStats);
+  const [overview, setOverview] = React.useState<WeeklyOverviewItemType[]>([]);
+  const [yearly, setYearly] = React.useState<YearlyBreakupType>({
     activas: 0,
     canceladas: 0,
     year: new Date().getFullYear(),
   });
-  const [monthly, setMonthly] = React.useState<api.MonthlyEarnings>({
+  const [monthly, setMonthly] = React.useState<MonthlyEarningsType>({
     total: 0,
     sparkline: [],
   });
-  const [actividad, setActividad] = React.useState<api.ActividadItem[]>([]);
-  const [proximas, setProximas] = React.useState<api.ProximaCita[]>([]);
+  const [actividad, setActividad] = React.useState<ActividadItemType[]>([]);
+  const [proximas, setProximas] = React.useState<ProximaCitaType[]>([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -74,22 +82,22 @@ export default function Dashboard() {
           },
         });
         // other pieces from the single endpoint
-        setOverview((res.graficoBarras as api.WeeklyOverviewItem[]) ?? []);
+        setOverview((res.graficoBarras as WeeklyOverviewItemType[]) ?? []);
         setYearly(
-          (res['anual-breakup'] as api.YearlyBreakup) ?? {
+          (res['anual-breakup'] as YearlyBreakupType) ?? {
             activas: 0,
             canceladas: 0,
             year: new Date().getFullYear(),
           },
         );
         setMonthly(
-          (res.sparklineMensual as api.MonthlyEarnings) ?? {
+          (res.sparklineMensual as MonthlyEarningsType) ?? {
             total: 0,
             sparkline: [],
           },
         );
-        setActividad((res['actividad-reciente'] as api.ActividadItem[]) ?? []);
-        setProximas((res['proximas-citas'] as api.ProximaCita[]) ?? []);
+        setActividad((res['actividad-reciente'] as ActividadItemType[]) ?? []);
+        setProximas((res['proximas-citas'] as ProximaCitaType[]) ?? []);
       } catch (err) {
         // keep defaults if API fails
         // console.error(err);

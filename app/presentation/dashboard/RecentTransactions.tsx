@@ -4,9 +4,9 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
-import type * as api from '../../application/services/api';
+import type { ActividadItem } from '../../domain/types';
 
-function iconForTipo(tipo: api.ActividadItem['tipo']) {
+function iconForTipo(tipo: ActividadItem['tipo']) {
   switch (tipo) {
     case 'cita_creada':
     case 'cita_reprogramada':
@@ -25,7 +25,7 @@ function iconForTipo(tipo: api.ActividadItem['tipo']) {
 export default function RecentTransactions({
   data,
 }: {
-  data?: api.ActividadItem[];
+  data?: ActividadItem[];
 }) {
   const items = (data && data.length ? data : []).map((it) => {
     const time = it.tiempo ? new Date(it.tiempo).toLocaleString('es-CO') : '';

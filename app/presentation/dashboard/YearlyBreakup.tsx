@@ -2,11 +2,11 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Paper, Typography, Box } from '@mui/material';
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import type * as api from '../../application/services/api';
+import type { YearlyBreakup } from '../../domain/types';
 
 const COLORS = ['#5D87FF', '#ECF2FF'];
 
-export default function YearlyBreakup({ data }: { data?: api.YearlyBreakup }) {
+export default function YearlyBreakup({ data }: { data?: YearlyBreakup }) {
   const calc = data
     ? [
         { name: 'Activas', value: data.activas },

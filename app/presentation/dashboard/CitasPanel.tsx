@@ -24,8 +24,8 @@ import {
 } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { v4 as uuid } from 'uuid';
-import * as api from '../../application/services/api';
-import type { Cita, Medico, Paciente } from '../../repository/storage';
+import * as service from '../../application/services';
+import type { Cita, Medico, Paciente } from '~/domain/types';
 
 export default function CitasPanel() {
   const [open, setOpen] = React.useState(false);
@@ -108,7 +108,7 @@ export default function CitasPanel() {
       setError('Duración debe estar entre 15 y 120 minutos');
       return;
     }
-    if (await api.hasConflictAsync(idMedico, fechaHora, duracion)) {
+    if (await service.hasConflictAsync(idMedico, fechaHora, duracion)) {
       setError('El médico tiene un solapamiento con otra cita');
       return;
     }
@@ -122,8 +122,8 @@ export default function CitasPanel() {
       motivo,
       estado: 'ACTIVA',
     } as any;
-    await api.createCitaAsync(c);
-    const raws = await api.getCitasAsync();
+    await service.createCitaAsync(c);
+    const raws = await service.getCitasAsync();
     setCitas(raws.map(normalizeRawCita));
     setSnack({ open: true, message: 'Cita agendada', severity: 'success' });
     setOpen(false);
@@ -136,8 +136,8 @@ export default function CitasPanel() {
   }
 
   async function handleCancel(id: string) {
-    await api.cancelCitaAsync(id);
-    const raws = await api.getCitasAsync();
+    await service.cancelCitaAsync(id);
+    const raws = await service.getCitasAsync();
     setCitas(raws.map(normalizeRawCita));
     setSnack({ open: true, message: 'Cita cancelada', severity: 'success' });
   }
@@ -165,7 +165,7 @@ export default function CitasPanel() {
       return;
     }
     if (
-      await api.hasConflictAsync(
+      await service.hasConflictAsync(
         editing.id_medico,
         editing.fecha_hora,
         editing.duracion_min,
@@ -175,12 +175,12 @@ export default function CitasPanel() {
       setError('Conflicto con otra cita');
       return;
     }
-    await api.updateCitaAsync(editing.id, {
+    await service.updateCitaAsync(editing.id, {
       fecha_hora: editing.fecha_hora,
       duracion_min: editing.duracion_min,
       motivo: editing.motivo,
     });
-    const raws = await api.getCitasAsync();
+    const raws = await service.getCitasAsync();
     setCitas(raws.map(normalizeRawCita));
     setReprogOpen(false);
     setEditing(null);
@@ -189,9 +189,9 @@ export default function CitasPanel() {
 
   React.useEffect(() => {
     (async () => {
-      setMedicos(await api.getMedicosAsync());
-      setPacientes(await api.getPacientesAsync());
-      const raws = await api.getCitasAsync();
+      setMedicos(await service.getMedicosAsync());
+      setPacientes(await service.getPacientesAsync());
+      const raws = await service.getCitasAsync();
       setCitas(raws.map(normalizeRawCita));
     })();
   }, []);

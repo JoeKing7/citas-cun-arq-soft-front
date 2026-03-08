@@ -1,4 +1,4 @@
 export * from './medicos';
 export * from './pacientes';
 export * from './citas';
-export * from './validators';
+export * from './dashboard';

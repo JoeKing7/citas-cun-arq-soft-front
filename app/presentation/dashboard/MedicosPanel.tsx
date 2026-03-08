@@ -25,8 +25,8 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
 import { v4 as uuid } from 'uuid';
-import type { Medico } from '../../repository/storage';
-import * as api from '../../application/services/api';
+import type { Medico } from '~/domain/types';
+import * as api from '../../application/services';
 
 function getInitials(name: string) {
   return name
