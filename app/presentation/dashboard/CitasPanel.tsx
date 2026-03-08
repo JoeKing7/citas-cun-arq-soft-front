@@ -43,6 +43,49 @@ export default function CitasPanel() {
     severity?: 'success' | 'error';
   }>({ open: false, message: '' });
   const [citas, setCitas] = React.useState<Cita[]>([]);
+
+  function normalizeRawCita(
+    r: any,
+  ): Cita & { medicoObj?: any; pacienteObj?: any } {
+    // Backend returns nested `medico` and `paciente` and camelCase fields.
+    if (!r) return r;
+    if (r.medico || r.paciente || r.fechaHora || r.duracionMin) {
+      const normalized: any = {
+        id: String(r.id),
+        id_medico: r.medico ? String(r.medico.id) : (r.id_medico as any),
+        id_paciente: r.paciente
+          ? String(r.paciente.id)
+          : (r.id_paciente as any),
+        fecha_hora: r.fechaHora ?? r.fecha_hora,
+        duracion_min: r.duracionMin ?? r.duracion_min ?? 0,
+        motivo: r.motivo,
+        estado: r.estado,
+      };
+      normalized.medicoObj = r.medico;
+      normalized.pacienteObj = r.paciente;
+      return normalized as Cita & { medicoObj?: any; pacienteObj?: any };
+    }
+    return r as Cita;
+  }
+
+  function formatDateTime(value?: string) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (!isNaN(d.getTime())) {
+      try {
+        return d.toLocaleString('es-CO', {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+      } catch {
+        return d.toLocaleString();
+      }
+    }
+    return value;
+  }
   const [reprogOpen, setReprogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Cita | null>(null);
 
@@ -80,7 +123,8 @@ export default function CitasPanel() {
       estado: 'ACTIVA',
     } as any;
     await api.createCitaAsync(c);
-    setCitas(await api.getCitasAsync());
+    const raws = await api.getCitasAsync();
+    setCitas(raws.map(normalizeRawCita));
     setSnack({ open: true, message: 'Cita agendada', severity: 'success' });
     setOpen(false);
     setIdMedico('');
@@ -93,7 +137,8 @@ export default function CitasPanel() {
 
   async function handleCancel(id: string) {
     await api.cancelCitaAsync(id);
-    setCitas(await api.getCitasAsync());
+    const raws = await api.getCitasAsync();
+    setCitas(raws.map(normalizeRawCita));
     setSnack({ open: true, message: 'Cita cancelada', severity: 'success' });
   }
 
@@ -135,7 +180,8 @@ export default function CitasPanel() {
       duracion_min: editing.duracion_min,
       motivo: editing.motivo,
     });
-    setCitas(await api.getCitasAsync());
+    const raws = await api.getCitasAsync();
+    setCitas(raws.map(normalizeRawCita));
     setReprogOpen(false);
     setEditing(null);
     setSnack({ open: true, message: 'Cita reprogramada', severity: 'success' });
@@ -145,7 +191,8 @@ export default function CitasPanel() {
     (async () => {
       setMedicos(await api.getMedicosAsync());
       setPacientes(await api.getPacientesAsync());
-      setCitas(await api.getCitasAsync());
+      const raws = await api.getCitasAsync();
+      setCitas(raws.map(normalizeRawCita));
     })();
   }, []);
 
@@ -218,8 +265,13 @@ export default function CitasPanel() {
                 </TableRow>
               )}
               {citas.map((c) => {
-                const med = medicos.find((m) => m.id === c.id_medico);
-                const pac = pacientes.find((p) => p.id === c.id_paciente);
+                // `c` may contain attached `medicoObj`/`pacienteObj` from backend normalization
+                const med =
+                  (c as any).medicoObj ??
+                  medicos.find((m) => m.id === c.id_medico);
+                const pac =
+                  (c as any).pacienteObj ??
+                  pacientes.find((p) => p.id === c.id_paciente);
                 const isActive = c.estado !== 'CANCELADA';
                 return (
                   <TableRow key={c.id} hover>
@@ -252,12 +304,15 @@ export default function CitasPanel() {
                         variant="body2"
                         sx={{ color: '#7C8FAC', fontSize: 12 }}
                       >
-                        {c.fecha_hora}
+                        {formatDateTime(
+                          ((c as any).fecha_hora || (c as any).fechaHora) ?? '',
+                        )}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2" sx={{ color: '#7C8FAC' }}>
-                        {c.duracion_min} min
+                        {(c as any).duracion_min ?? (c as any).duracionMin ?? 0}{' '}
+                        min
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -515,6 +570,7 @@ export default function CitasPanel() {
         open={snack.open}
         autoHideDuration={3000}
         onClose={() => setSnack({ ...snack, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert severity={snack.severity || 'success'} sx={{ width: '100%' }}>
           {snack.message}

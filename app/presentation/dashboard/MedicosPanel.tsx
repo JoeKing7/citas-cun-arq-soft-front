@@ -44,6 +44,15 @@ const SPECIALTY_COLORS: Record<string, { bg: string; text: string }> = {
   Neurología: { bg: '#E6FBF7', text: '#13DEB9' },
 };
 
+const ESPECIALIDADES = [
+  'Cardiología',
+  'Pediatría',
+  'Neurología',
+  'Medicina General',
+  'Dermatología',
+  'Ginecología',
+];
+
 function specialtyColor(esp: string) {
   return SPECIALTY_COLORS[esp] || SPECIALTY_COLORS.default;
 }
@@ -61,6 +70,10 @@ export default function MedicosPanel() {
     severity?: 'success' | 'error';
   }>({ open: false, message: '' });
 
+  const visibles = lista.filter(
+    (m) => (m as any).estado === 'ACTIVO' || (m as any).estado === undefined,
+  );
+
   React.useEffect(() => {
     (async () => setLista(await api.getMedicosAsync()))();
   }, []);
@@ -71,8 +84,21 @@ export default function MedicosPanel() {
 
   async function handleAdd() {
     setError(null);
+    // Validations
     if (!nombre.trim() || !especialidad.trim() || !numLicencia.trim()) {
       setError('Todos los campos son obligatorios');
+      return;
+    }
+    // Nombre: only letters and spaces
+    if (!/^[A-Za-zÀ-ÿ\s]{3,150}$/.test(nombre.trim())) {
+      setError(
+        'El nombre sólo debe contener letras y espacios (3-150 caracteres)',
+      );
+      return;
+    }
+    // Num licencia: digits only
+    if (!/^[0-9]{3,50}$/.test(numLicencia.trim())) {
+      setError('Número de licencia inválido (solo números, 3-50 dígitos)');
       return;
     }
     const existing = lista.find((x) => x.num_licencia === numLicencia.trim());
@@ -155,7 +181,7 @@ export default function MedicosPanel() {
               </TableRow>
             </TableHead>
             <TableBody>
-              {lista.length === 0 && (
+              {visibles.length === 0 && (
                 <TableRow>
                   <TableCell
                     colSpan={4}
@@ -166,7 +192,7 @@ export default function MedicosPanel() {
                   </TableCell>
                 </TableRow>
               )}
-              {lista.map((m) => {
+              {visibles.map((m) => {
                 const col = specialtyColor(m.especialidad);
                 return (
                   <TableRow key={m.id} hover>
@@ -249,19 +275,36 @@ export default function MedicosPanel() {
             <TextField
               label="Nombre completo"
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              onChange={(e) =>
+                setNombre(e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, ''))
+              }
+              inputProps={{ maxLength: 150 }}
               fullWidth
             />
             <TextField
+              select
               label="Especialidad"
               value={especialidad}
               onChange={(e) => setEspecialidad(e.target.value)}
               fullWidth
-            />
+            >
+              {ESPECIALIDADES.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </TextField>
             <TextField
               label="Número de licencia"
               value={numLicencia}
-              onChange={(e) => setNumLicencia(e.target.value)}
+              onChange={(e) =>
+                setNumLicencia(e.target.value.replace(/[^0-9]/g, ''))
+              }
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '\\d*',
+                maxLength: 50,
+              }}
               fullWidth
             />
             {error && (
@@ -285,6 +328,7 @@ export default function MedicosPanel() {
         open={snack.open}
         autoHideDuration={3000}
         onClose={() => setSnack({ ...snack, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert severity={snack.severity || 'success'} sx={{ width: '100%' }}>
           {snack.message}

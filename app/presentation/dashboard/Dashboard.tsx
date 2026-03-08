@@ -12,6 +12,7 @@ import CitasPanel from './CitasPanel';
 import YearlyBreakup from './YearlyBreakup';
 import MonthlyEarnings from './MonthlyEarnings';
 import ProximasCitas from './ProximasCitas';
+import * as api from '../../application/services/api';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import PeopleIcon from '@mui/icons-material/People';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
@@ -22,6 +23,26 @@ type View = 'dashboard' | 'medicos' | 'pacientes' | 'citas';
 export default function Dashboard() {
   const [open, setOpen] = React.useState(true);
   const [view, setView] = React.useState<View>('dashboard');
+  const initialStats: api.DashboardStats = {
+    citasHoy: 0,
+    medicosActivos: 0,
+    totalPacientes: 0,
+    citasSemana: 0,
+    tendencias: { citasHoy: '', medicos: '', pacientes: '' },
+  };
+  const [stats, setStats] = React.useState<api.DashboardStats>(initialStats);
+  const [overview, setOverview] = React.useState<api.WeeklyOverviewItem[]>([]);
+  const [yearly, setYearly] = React.useState<api.YearlyBreakup>({
+    activas: 0,
+    canceladas: 0,
+    year: new Date().getFullYear(),
+  });
+  const [monthly, setMonthly] = React.useState<api.MonthlyEarnings>({
+    total: 0,
+    sparkline: [],
+  });
+  const [actividad, setActividad] = React.useState<api.ActividadItem[]>([]);
+  const [proximas, setProximas] = React.useState<api.ProximaCita[]>([]);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
@@ -33,6 +54,52 @@ export default function Dashboard() {
     setView(v);
     if (isMobile) setOpen(false);
   };
+
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        const res: any = await api.getDashboardStatsAsync();
+        if (!mounted) return;
+        // core stats
+        setStats({
+          citasHoy: res.citasHoy ?? 0,
+          medicosActivos: res.medicosActivos ?? 0,
+          totalPacientes: res.totalPacientes ?? 0,
+          citasSemana: res.citasSemana ?? 0,
+          tendencias: res.tendencias ?? {
+            citasHoy: '',
+            medicos: '',
+            pacientes: '',
+          },
+        });
+        // other pieces from the single endpoint
+        setOverview((res.graficoBarras as api.WeeklyOverviewItem[]) ?? []);
+        setYearly(
+          (res['anual-breakup'] as api.YearlyBreakup) ?? {
+            activas: 0,
+            canceladas: 0,
+            year: new Date().getFullYear(),
+          },
+        );
+        setMonthly(
+          (res.sparklineMensual as api.MonthlyEarnings) ?? {
+            total: 0,
+            sparkline: [],
+          },
+        );
+        setActividad((res['actividad-reciente'] as api.ActividadItem[]) ?? []);
+        setProximas((res['proximas-citas'] as api.ProximaCita[]) ?? []);
+      } catch (err) {
+        // keep defaults if API fails
+        // console.error(err);
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   return (
     <Box
@@ -83,28 +150,34 @@ export default function Dashboard() {
             >
               <StatCard
                 title="Citas Hoy"
-                value={24}
+                value={stats.citasHoy}
                 icon={<EventAvailableIcon fontSize="small" />}
                 color="#5D87FF"
-                trend={{ value: '+3% ayer', positive: true }}
+                trend={{ value: stats.tendencias.citasHoy, positive: true }}
               />
               <StatCard
                 title="Médicos Activos"
-                value={12}
+                value={stats.medicosActivos}
                 icon={<LocalHospitalIcon fontSize="small" />}
                 color="#13DEB9"
-                trend={{ value: '+1 este mes', positive: true }}
+                trend={{
+                  value: stats.tendencias.medicos,
+                  positive: true,
+                }}
               />
               <StatCard
                 title="Pacientes"
-                value={1240}
+                value={stats.totalPacientes}
                 icon={<PeopleIcon fontSize="small" />}
                 color="#FFAE1F"
-                trend={{ value: '+18 semana', positive: true }}
+                trend={{
+                  value: stats.tendencias.pacientes,
+                  positive: true,
+                }}
               />
               <StatCard
                 title="Citas Semana"
-                value={58}
+                value={stats.citasSemana}
                 icon={<CalendarTodayIcon fontSize="small" />}
                 color="#FA896B"
                 subtitle="próximos 7 días"
@@ -120,10 +193,10 @@ export default function Dashboard() {
                 alignItems: 'start',
               }}
             >
-              <OverviewCharts />
+              <OverviewCharts data={overview} />
               <Stack spacing={2}>
-                <YearlyBreakup />
-                <MonthlyEarnings />
+                <YearlyBreakup data={yearly} />
+                <MonthlyEarnings data={monthly} />
               </Stack>
             </Box>
 
@@ -136,8 +209,8 @@ export default function Dashboard() {
                 alignItems: 'start',
               }}
             >
-              <RecentTransactions />
-              <ProximasCitas />
+              <RecentTransactions data={actividad} />
+              <ProximasCitas data={proximas} />
             </Box>
           </Stack>
         )}

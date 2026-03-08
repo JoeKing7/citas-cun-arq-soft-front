@@ -12,7 +12,6 @@ import {
   DialogActions,
   Table,
   TableHead,
-  TableRow,
   TableCell,
   TableBody,
   IconButton,
@@ -20,6 +19,7 @@ import {
   Alert,
   Avatar,
   Tooltip,
+  TableRow,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PeopleIcon from '@mui/icons-material/People';
@@ -51,7 +51,10 @@ export default function PacientesPanel() {
   }>({ open: false, message: '' });
 
   React.useEffect(() => {
-    (async () => setLista(await api.getPacientesAsync()))();
+    (async () => {
+      const all = await api.getPacientesAsync();
+      setLista(all.filter((p) => p.estado === 'ACTIVO'));
+    })();
   }, []);
 
   function isValidEmail(email: string) {
@@ -60,8 +63,29 @@ export default function PacientesPanel() {
 
   async function handleAdd() {
     setError(null);
-    if (!nombre.trim() || !documento.trim() || !correo.trim()) {
+    // All fields required
+    if (
+      !nombre.trim() ||
+      !documento.trim() ||
+      !correo.trim() ||
+      !telefono.trim()
+    ) {
       setError('Todos los campos obligatorios deben completarse');
+      return;
+    }
+    // Nombre: only letters, spaces and basic accents
+    if (!/^[A-Za-zÀ-ÿ\s]+$/.test(nombre.trim())) {
+      setError('El nombre sólo debe contener letras y espacios');
+      return;
+    }
+    // Documento: digits only, reasonable length
+    if (!/^[0-9]{6,11}$/.test(documento.trim())) {
+      setError('El documento debe ser numérico (6-11 dígitos)');
+      return;
+    }
+    // Teléfono: digits only, reasonable length
+    if (!/^[0-9]{10}$/.test(telefono.trim())) {
+      setError('El teléfono debe ser numérico (10 dígitos)');
       return;
     }
     if (!isValidEmail(correo)) {
@@ -93,17 +117,30 @@ export default function PacientesPanel() {
     setDocumento('');
     setCorreo('');
     setTelefono('');
-    setLista(await api.getPacientesAsync());
+    const all = await api.getPacientesAsync();
+    setLista(all.filter((p) => p.estado === 'ACTIVO'));
   }
 
   async function handleDelete(id: string) {
-    await api.deletePacienteAsync(id);
-    setLista(await api.getPacientesAsync());
-    setSnack({
-      open: true,
-      message: 'Paciente eliminado',
-      severity: 'success',
-    });
+    try {
+      await api.deletePacienteAsync(id);
+      const all = await api.getPacientesAsync();
+      setLista(all.filter((p) => p.estado === 'ACTIVO'));
+      setSnack({
+        open: true,
+        message: 'Paciente inactivado',
+        severity: 'success',
+      });
+    } catch (err: any) {
+      const message =
+        err &&
+        (err.message ||
+          err?.error ||
+          (Array.isArray(err.message) && err.message.join(', ')))
+          ? err.message || err.error
+          : JSON.stringify(err);
+      setSnack({ open: true, message: String(message), severity: 'error' });
+    }
   }
 
   return (
@@ -257,7 +294,14 @@ export default function PacientesPanel() {
             <TextField
               label="Documento"
               value={documento}
-              onChange={(e) => setDocumento(e.target.value)}
+              onChange={(e) =>
+                setDocumento(e.target.value.replace(/[^0-9]/g, ''))
+              }
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '\\d*',
+                maxLength: 20,
+              }}
               fullWidth
             />
             <TextField
@@ -270,7 +314,14 @@ export default function PacientesPanel() {
             <TextField
               label="Teléfono"
               value={telefono}
-              onChange={(e) => setTelefono(e.target.value)}
+              onChange={(e) =>
+                setTelefono(e.target.value.replace(/[^0-9]/g, ''))
+              }
+              inputProps={{
+                inputMode: 'numeric',
+                pattern: '\\d*',
+                maxLength: 15,
+              }}
               fullWidth
             />
             {error && (
@@ -294,6 +345,7 @@ export default function PacientesPanel() {
         open={snack.open}
         autoHideDuration={3000}
         onClose={() => setSnack({ ...snack, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <Alert severity={snack.severity || 'success'} sx={{ width: '100%' }}>
           {snack.message}

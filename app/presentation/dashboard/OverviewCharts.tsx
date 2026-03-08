@@ -10,19 +10,15 @@ import {
   Legend,
 } from 'recharts';
 import { Paper, Box, Typography, Select, MenuItem } from '@mui/material';
+import type * as api from '../../application/services/api';
 
-const sample = [
-  { name: 'Lun', activas: 12, canceladas: 3 },
-  { name: 'Mar', activas: 18, canceladas: 5 },
-  { name: 'Mié', activas: 15, canceladas: 2 },
-  { name: 'Jue', activas: 24, canceladas: 6 },
-  { name: 'Vie', activas: 20, canceladas: 4 },
-  { name: 'Sáb', activas: 8, canceladas: 1 },
-  { name: 'Dom', activas: 4, canceladas: 1 },
-];
-
-export default function OverviewCharts() {
+export default function OverviewCharts({
+  data,
+}: {
+  data?: api.WeeklyOverviewItem[];
+}) {
   const [period, setPeriod] = React.useState('Semana');
+  const chartData = data ?? [];
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -59,13 +55,13 @@ export default function OverviewCharts() {
           }}
         >
           <MenuItem value="Semana">Esta semana</MenuItem>
-          <MenuItem value="Mes">Este mes</MenuItem>
-          <MenuItem value="Año">Este año</MenuItem>
+          {/* <MenuItem value="Mes">Este mes</MenuItem>
+          <MenuItem value="Año">Este año</MenuItem> */}
         </Select>
       </Box>
       <Box sx={{ height: 220 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={sample} barGap={4} barCategoryGap="30%">
+          <BarChart data={chartData} barGap={4} barCategoryGap="30%">
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="rgba(0,0,0,0.06)"

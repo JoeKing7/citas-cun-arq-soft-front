@@ -2,21 +2,16 @@ import React from 'react';
 import { AreaChart, Area, ResponsiveContainer, Tooltip } from 'recharts';
 import { Paper, Typography, Box, Avatar } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import type * as api from '../../application/services/api';
 
-const sparkData = [
-  { v: 10 },
-  { v: 18 },
-  { v: 12 },
-  { v: 25 },
-  { v: 20 },
-  { v: 30 },
-  { v: 24 },
-  { v: 35 },
-  { v: 28 },
-  { v: 40 },
-];
+export default function MonthlyEarnings({
+  data,
+}: {
+  data?: api.MonthlyEarnings;
+}) {
+  const total = data?.total ?? 0;
+  const spark = (data?.sparkline ?? []).map((v) => ({ v }));
 
-export default function MonthlyEarnings() {
   return (
     <Paper sx={{ p: 3 }}>
       <Box
@@ -40,13 +35,13 @@ export default function MonthlyEarnings() {
             fontWeight={700}
             sx={{ color: '#2A3547', mt: 0.5 }}
           >
-            248
+            {total}
           </Typography>
           <Typography
             variant="caption"
             sx={{ color: '#13DEB9', fontWeight: 700 }}
           >
-            +12% mes anterior
+            {data?.porcentaje ?? ''}
           </Typography>
         </Box>
 
@@ -66,7 +61,7 @@ export default function MonthlyEarnings() {
       {/* Sparkline */}
       <Box sx={{ height: 60, mt: 1 }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={sparkData}>
+          <AreaChart data={spark}>
             <defs>
               <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#49BEFF" stopOpacity={0.25} />

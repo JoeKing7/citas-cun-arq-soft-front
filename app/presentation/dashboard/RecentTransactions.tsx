@@ -4,51 +4,55 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LocalHospitalIcon from '@mui/icons-material/LocalHospital';
+import type * as api from '../../application/services/api';
 
-const events = [
-  {
-    time: '09:30 am',
-    title: 'Cita confirmada',
-    sub: 'Juan Pérez — Dr. Rodríguez',
-    icon: <EventAvailableIcon sx={{ fontSize: 16 }} />,
-    color: '#13DEB9',
-    bg: '#E6FBF7',
-  },
-  {
-    time: '10:00 am',
-    title: 'Cita cancelada',
-    sub: 'María López — Dra. García',
-    icon: <EventBusyIcon sx={{ fontSize: 16 }} />,
-    color: '#FA896B',
-    bg: '#FEF0EB',
-  },
-  {
-    time: '11:15 am',
-    title: 'Nuevo paciente',
-    sub: 'Ana Torres registrada',
-    icon: <PersonAddIcon sx={{ fontSize: 16 }} />,
-    color: '#5D87FF',
-    bg: '#ECF2FF',
-  },
-  {
-    time: '12:00 pm',
-    title: 'Médico registrado',
-    sub: 'Dr. Carlos Muñoz — Cardiología',
-    icon: <LocalHospitalIcon sx={{ fontSize: 16 }} />,
-    color: '#FFAE1F',
-    bg: '#FEF5E5',
-  },
-  {
-    time: '02:30 pm',
-    title: 'Cita reprogramada',
-    sub: 'Luis Ramírez — Dr. Herrera',
-    icon: <EventAvailableIcon sx={{ fontSize: 16 }} />,
-    color: '#49BEFF',
-    bg: '#E8F7FF',
-  },
-];
+function iconForTipo(tipo: api.ActividadItem['tipo']) {
+  switch (tipo) {
+    case 'cita_creada':
+    case 'cita_reprogramada':
+      return <EventAvailableIcon sx={{ fontSize: 16 }} />;
+    case 'cita_cancelada':
+      return <EventBusyIcon sx={{ fontSize: 16 }} />;
+    case 'paciente_registrado':
+      return <PersonAddIcon sx={{ fontSize: 16 }} />;
+    case 'medico_agregado':
+      return <LocalHospitalIcon sx={{ fontSize: 16 }} />;
+    default:
+      return <EventAvailableIcon sx={{ fontSize: 16 }} />;
+  }
+}
 
-export default function RecentTransactions() {
+export default function RecentTransactions({
+  data,
+}: {
+  data?: api.ActividadItem[];
+}) {
+  const items = (data && data.length ? data : []).map((it) => {
+    const time = it.tiempo ? new Date(it.tiempo).toLocaleString('es-CO') : '';
+    let title = '';
+    let sub = it.descripcion;
+    switch (it.tipo) {
+      case 'cita_creada':
+        title = 'Cita creada';
+        break;
+      case 'cita_cancelada':
+        title = 'Cita cancelada';
+        break;
+      case 'paciente_registrado':
+        title = 'Paciente registrado';
+        break;
+      case 'medico_agregado':
+        title = 'Médico registrado';
+        break;
+      case 'cita_reprogramada':
+        title = 'Cita reprogramada';
+        break;
+      default:
+        title = 'Actividad';
+    }
+    return { time, title, sub, icon: iconForTipo(it.tipo) };
+  });
+
   return (
     <Paper sx={{ p: 3 }}>
       <Typography
@@ -66,17 +70,16 @@ export default function RecentTransactions() {
       </Typography>
 
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        {events.map((ev, i) => (
+        {items.map((ev, i) => (
           <Box
             key={i}
             sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}
           >
-            {/* Time */}
             <Typography
               variant="caption"
               sx={{
                 color: '#7C8FAC',
-                minWidth: 64,
+                minWidth: 120,
                 pt: 0.3,
                 whiteSpace: 'nowrap',
               }}
@@ -84,7 +87,6 @@ export default function RecentTransactions() {
               {ev.time}
             </Typography>
 
-            {/* Timeline dot */}
             <Box
               sx={{
                 display: 'flex',
@@ -97,13 +99,13 @@ export default function RecentTransactions() {
                 sx={{
                   width: 28,
                   height: 28,
-                  bgcolor: ev.bg,
-                  color: ev.color,
+                  bgcolor: '#F5F7FA',
+                  color: '#4B5563',
                 }}
               >
                 {ev.icon}
               </Avatar>
-              {i < events.length - 1 && (
+              {i < items.length - 1 && (
                 <Box
                   sx={{
                     width: 1,
@@ -116,8 +118,7 @@ export default function RecentTransactions() {
               )}
             </Box>
 
-            {/* Content */}
-            <Box sx={{ pb: i < events.length - 1 ? 1 : 0 }}>
+            <Box sx={{ pb: i < items.length - 1 ? 1 : 0 }}>
               <Typography
                 variant="body2"
                 fontWeight={600}

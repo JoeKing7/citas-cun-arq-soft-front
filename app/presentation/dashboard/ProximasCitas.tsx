@@ -10,56 +10,9 @@ import {
   Avatar,
   Box,
   Chip,
-  Button,
 } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-
-const proximas = [
-  {
-    id: 1,
-    paciente: 'Juan Pérez',
-    rol: 'Cardiología',
-    medico: 'Dr. Rodríguez',
-    hora: '09:00 — 09:30',
-    estado: 'ACTIVA',
-    avatar: 'JP',
-    avatarColor: '#ECF2FF',
-    avatarText: '#5D87FF',
-  },
-  {
-    id: 2,
-    paciente: 'María López',
-    rol: 'Pediatría',
-    medico: 'Dra. García',
-    hora: '10:00 — 10:30',
-    estado: 'ACTIVA',
-    avatar: 'ML',
-    avatarColor: '#FEF5E5',
-    avatarText: '#FFAE1F',
-  },
-  {
-    id: 3,
-    paciente: 'Carlos Ruiz',
-    rol: 'Neurología',
-    medico: 'Dr. Herrera',
-    hora: '11:00 — 11:45',
-    estado: 'CANCELADA',
-    avatar: 'CR',
-    avatarColor: '#FEF0EB',
-    avatarText: '#FA896B',
-  },
-  {
-    id: 4,
-    paciente: 'Ana Torres',
-    rol: 'Geriatría',
-    medico: 'Dra. Muñoz',
-    hora: '14:00 — 14:30',
-    estado: 'ACTIVA',
-    avatar: 'AT',
-    avatarColor: '#E6FBF7',
-    avatarText: '#13DEB9',
-  },
-];
+import type * as api from '../../application/services/api';
 
 const estadoChip = (estado: string) => {
   if (estado === 'ACTIVA')
@@ -79,7 +32,9 @@ const estadoChip = (estado: string) => {
   );
 };
 
-export default function ProximasCitas() {
+export default function ProximasCitas({ data }: { data?: api.ProximaCita[] }) {
+  const rows = data && data.length ? data : [];
+
   return (
     <Paper sx={{ p: 3 }}>
       <Box
@@ -121,7 +76,7 @@ export default function ProximasCitas() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {proximas.map((row) => (
+          {rows.map((row) => (
             <TableRow key={row.id} hover>
               <TableCell>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -131,11 +86,15 @@ export default function ProximasCitas() {
                       height: 32,
                       fontSize: 11,
                       fontWeight: 700,
-                      bgcolor: row.avatarColor,
-                      color: row.avatarText,
+                      bgcolor: '#F3F6F9',
+                      color: '#334155',
                     }}
                   >
-                    {row.avatar}
+                    {row.pacienteNombre
+                      ?.split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')}
                   </Avatar>
                   <Box>
                     <Typography
@@ -143,17 +102,17 @@ export default function ProximasCitas() {
                       fontWeight={600}
                       sx={{ color: '#2A3547', lineHeight: 1.2 }}
                     >
-                      {row.paciente}
+                      {row.pacienteNombre}
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#7C8FAC' }}>
-                      {row.rol}
+                      {row.especialidad}
                     </Typography>
                   </Box>
                 </Box>
               </TableCell>
               <TableCell>
                 <Typography variant="body2" sx={{ color: '#2A3547' }}>
-                  {row.medico}
+                  {row.medicoNombre}
                 </Typography>
               </TableCell>
               <TableCell>
